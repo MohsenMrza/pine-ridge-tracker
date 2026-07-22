@@ -19,10 +19,10 @@ const pinIcon = new L.Icon({
   popupAnchor: [0, -38],
 });
 
-// The map image is 1000x700; we use image bounds as the coordinate space
+// The map image is 924x1126 (Pine Ridge Memorial Garden illustrated site plan)
 // (map_x/map_y from the backend are 0-100 percentages, converted here)
-const IMAGE_WIDTH = 1000;
-const IMAGE_HEIGHT = 700;
+const IMAGE_WIDTH = 924;
+const IMAGE_HEIGHT = 1126;
 const bounds = [
   [0, 0],
   [IMAGE_HEIGHT, IMAGE_WIDTH],
@@ -87,7 +87,7 @@ function App() {
         maxBounds={bounds}
         minZoom={-1}
       >
-        <ImageOverlay url="/cemetery-map.svg" bounds={bounds} />
+        <ImageOverlay url="/cemetery-map.png" bounds={bounds} />
 
         {(searchTerm ? filteredPlots : plots).map((plot) => {
           if (plot.map_x == null || plot.map_y == null) return null;

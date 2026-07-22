@@ -16,9 +16,11 @@ Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
 
-# map_x / map_y are percentages (0-100) of the placeholder map image.
-# Once you have the real Pine Ridge site plan, replot these coordinates
-# by clicking positions on the actual image.
+# map_x / map_y are percentages (0-100) across the Pine Ridge site plan image
+# (frontend/public/cemetery-map.png). These sample values are just placeholders
+# near the top of the image -- once you know which garden section your family
+# is in, update these to roughly match that area, then fine-tune by eye once
+# the map is loaded in the browser.
 PEOPLE = [
     {
         "plot": {"section": "A", "row": "3", "plot_number": "14", "map_x": 30, "map_y": 40, "qr_code_id": "A-3-14"},
