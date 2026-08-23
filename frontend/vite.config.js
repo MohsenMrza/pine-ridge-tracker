@@ -7,7 +7,7 @@ export default defineConfig({
     host: true,
     port: 5173,
     watch: {
-      usePolling: true, // needed for hot-reload to work reliably inside Docker on Windows
+      usePolling: true,
     },
   },
 });

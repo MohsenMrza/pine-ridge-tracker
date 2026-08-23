@@ -32,6 +32,12 @@ body {
   color: #3d3d3d;
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .search-box {
   padding: 8px 14px;
   border: 1px solid #d5d5d5;
@@ -44,6 +50,22 @@ body {
 
 .search-box:focus {
   border-color: #6b5b95;
+}
+
+.reset-btn {
+  padding: 8px 14px;
+  border: 1px solid #6b5b95;
+  background: #f5f2fa;
+  color: #6b5b95;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.reset-btn:hover {
+  background: #ece5f5;
 }
 
 .status-banner {

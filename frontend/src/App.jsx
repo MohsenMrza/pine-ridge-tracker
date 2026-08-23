@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { MapContainer, ImageOverlay, Marker, Popup } from "react-leaflet";
+import { useEffect, useRef, useState } from "react";
+import { MapContainer, ImageOverlay, Marker, Popup, Polygon } from "react-leaflet";
 import L from "leaflet";
+import { SECTIONS } from "./sections";
 
 const API_URL = "http://localhost:8000";
 
-// Custom pin icon (default Leaflet marker doesn't load correctly with bundlers)
 const pinIcon = new L.Icon({
   iconUrl:
     "data:image/svg+xml;base64," +
@@ -19,8 +19,7 @@ const pinIcon = new L.Icon({
   popupAnchor: [0, -38],
 });
 
-// The map image is 924x1126 (Pine Ridge Memorial Garden illustrated site plan)
-// (map_x/map_y from the backend are 0-100 percentages, converted here)
+// Real dimensions of frontend/public/cemetery-map.png (Pine Ridge site plan)
 const IMAGE_WIDTH = 924;
 const IMAGE_HEIGHT = 1126;
 const bounds = [
@@ -32,11 +31,18 @@ function percentToLatLng(map_x, map_y) {
   return [(map_y / 100) * IMAGE_HEIGHT, (map_x / 100) * IMAGE_WIDTH];
 }
 
+function sectionPolygon(section) {
+  return section.points.map(([x, y]) => percentToLatLng(x, y));
+}
+
 function App() {
   const [plots, setPlots] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedSection, setSelectedSection] = useState(null);
+
+  const mapRef = useRef(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/plots/`)
@@ -60,17 +66,39 @@ function App() {
     )
   );
 
+  function handleSectionClick(section) {
+    setSelectedSection(section.name);
+    if (mapRef.current) {
+      const polyBounds = L.latLngBounds(sectionPolygon(section));
+      mapRef.current.flyToBounds(polyBounds, { padding: [40, 40], duration: 0.6 });
+    }
+  }
+
+  function resetView() {
+    setSelectedSection(null);
+    if (mapRef.current) {
+      mapRef.current.flyToBounds(bounds, { padding: [20, 20], duration: 0.6 });
+    }
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
         <h1>Pine Ridge Grave Tracker</h1>
-        <input
-          type="text"
-          className="search-box"
-          placeholder="Search by name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div className="header-controls">
+          {selectedSection && (
+            <button className="reset-btn" onClick={resetView}>
+              &larr; {selectedSection}
+            </button>
+          )}
+          <input
+            type="text"
+            className="search-box"
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       </header>
 
       {loading && <div className="status-banner">Loading plots...</div>}
@@ -81,6 +109,7 @@ function App() {
       )}
 
       <MapContainer
+        ref={mapRef}
         crs={L.CRS.Simple}
         bounds={bounds}
         style={{ height: "calc(100vh - 80px)", width: "100%" }}
@@ -88,6 +117,30 @@ function App() {
         minZoom={-1}
       >
         <ImageOverlay url="/cemetery-map.png" bounds={bounds} />
+
+        {SECTIONS.map((section) => {
+          const isSelected = selectedSection === section.name;
+          return (
+            <Polygon
+              key={section.name}
+              positions={sectionPolygon(section)}
+              pathOptions={{
+                color: isSelected ? "#6b5b95" : "#8a9a82",
+                weight: isSelected ? 3 : 1,
+                fillColor: isSelected ? "#6b5b95" : "#8a9a82",
+                fillOpacity: isSelected ? 0.22 : 0.06,
+              }}
+              eventHandlers={{
+                click: () => handleSectionClick(section),
+                mouseover: (e) => e.target.setStyle({ fillOpacity: 0.18 }),
+                mouseout: (e) =>
+                  e.target.setStyle({ fillOpacity: isSelected ? 0.22 : 0.06 }),
+              }}
+            >
+              <Popup>{section.name}</Popup>
+            </Polygon>
+          );
+        })}
 
         {(searchTerm ? filteredPlots : plots).map((plot) => {
           if (plot.map_x == null || plot.map_y == null) return null;

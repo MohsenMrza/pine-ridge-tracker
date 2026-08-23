@@ -1,0 +1,135 @@
+<!doctype html>
+<!--
+  SECTION TRACING HELPER
+  Open this file directly in your browser (double-click it, no server needed).
+  Click points around a garden section's border in order, click "Finish
+  Section" and name it, repeat for other sections, then copy the exported
+  JSON into frontend/src/sections.js.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pine Ridge - Section Tracing Helper</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 20px; background: #f4f4f4; }
+    h2 { margin-top: 0; }
+    #wrapper { position: relative; display: inline-block; border: 2px solid #333; }
+    #map-img { display: block; max-width: 900px; height: auto; cursor: crosshair; }
+    svg { position: absolute; top: 0; left: 0; pointer-events: none; }
+    .controls { margin-top: 12px; display: flex; gap: 10px; }
+    button {
+      padding: 8px 14px; border: none; border-radius: 6px; background: #6b5b95;
+      color: #fff; font-size: 14px; cursor: pointer;
+    }
+    button.secondary { background: #999; }
+    #output {
+      margin-top: 12px; padding: 12px; background: #fff; border: 1px solid #ccc;
+      border-radius: 6px; font-family: monospace; font-size: 13px; max-width: 900px;
+      white-space: pre-wrap; max-height: 300px; overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h2>Click around a section's border, then "Finish Section"</h2>
+  <p>Click points in order tracing the garden's outline. Repeat for each section.</p>
+  <div id="wrapper">
+    <img id="map-img" src="frontend/public/cemetery-map.png" alt="Pine Ridge site plan" />
+    <svg id="overlay"></svg>
+  </div>
+  <div class="controls">
+    <button id="finish-btn">Finish Section</button>
+    <button id="undo-btn" class="secondary">Undo Last Point</button>
+    <button id="export-btn" class="secondary">Export All as JSON</button>
+  </div>
+  <div id="output">Sections you finish will appear here as JSON. Paste the result into frontend/src/sections.js</div>
+
+  <script>
+    const img = document.getElementById("map-img");
+    const wrapper = document.getElementById("wrapper");
+    const svg = document.getElementById("overlay");
+    const output = document.getElementById("output");
+
+    let currentPoints = [];
+    let sections = [];
+
+    function render() {
+      svg.setAttribute("width", img.clientWidth);
+      svg.setAttribute("height", img.clientHeight);
+      svg.innerHTML = "";
+
+      // draw finished sections
+      sections.forEach((s) => {
+        const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        poly.setAttribute(
+          "points",
+          s.points.map(([x, y]) => `${(x / 100) * img.clientWidth},${(y / 100) * img.clientHeight}`).join(" ")
+        );
+        poly.setAttribute("fill", "rgba(107,91,149,0.15)");
+        poly.setAttribute("stroke", "#6b5b95");
+        svg.appendChild(poly);
+      });
+
+      // draw current in-progress points
+      currentPoints.forEach(([x, y], i) => {
+        const cx = (x / 100) * img.clientWidth;
+        const cy = (y / 100) * img.clientHeight;
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", cx);
+        circle.setAttribute("cy", cy);
+        circle.setAttribute("r", 4);
+        circle.setAttribute("fill", "red");
+        svg.appendChild(circle);
+      });
+      if (currentPoints.length > 1) {
+        const poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        poly.setAttribute(
+          "points",
+          currentPoints.map(([x, y]) => `${(x / 100) * img.clientWidth},${(y / 100) * img.clientHeight}`).join(" ")
+        );
+        poly.setAttribute("fill", "none");
+        poly.setAttribute("stroke", "red");
+        svg.appendChild(poly);
+      }
+    }
+
+    wrapper.addEventListener("click", (e) => {
+      if (e.target === img) {
+        const rect = img.getBoundingClientRect();
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        currentPoints.push([Number(x.toFixed(2)), Number(y.toFixed(2))]);
+        render();
+      }
+    });
+
+    document.getElementById("undo-btn").addEventListener("click", () => {
+      currentPoints.pop();
+      render();
+    });
+
+    document.getElementById("finish-btn").addEventListener("click", () => {
+      if (currentPoints.length < 3) {
+        alert("Add at least 3 points to form a section outline.");
+        return;
+      }
+      const name = prompt("Name this section (e.g. 'Angels Garden'):");
+      if (!name) return;
+      sections.push({ name, points: currentPoints });
+      currentPoints = [];
+      render();
+      updateOutput();
+    });
+
+    document.getElementById("export-btn").addEventListener("click", updateOutput);
+
+    function updateOutput() {
+      const js =
+        "export const SECTIONS = " + JSON.stringify(sections, null, 2) + ";\n";
+      output.textContent = js;
+    }
+
+    img.addEventListener("load", render);
+    window.addEventListener("resize", render);
+  </script>
+</body>
+</html>

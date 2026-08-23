@@ -3,7 +3,7 @@
   PIN PLACEMENT HELPER
   Open this file directly in your browser (double-click it, no server needed).
   Click anywhere on the map image and it will show you the map_x / map_y
-  percentage values to use in seed.py or the admin API for that plot.
+  percentage values to use in seed.py for that plot.
 -->
 <html lang="en">
 <head>
@@ -55,7 +55,6 @@
       const pctX = ((x / rect.width) * 100).toFixed(2);
       const pctY = ((y / rect.height) * 100).toFixed(2);
 
-      // drop a visual marker
       const dot = document.createElement("div");
       dot.className = "dot";
       dot.style.left = x + "px";
