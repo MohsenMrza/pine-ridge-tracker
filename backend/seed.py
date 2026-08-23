@@ -27,6 +27,12 @@ Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
 
+# Clear existing data first so re-running this script doesn't pile up
+# duplicates or leave old test/placeholder entries behind.
+db.query(models.Person).delete()
+db.query(models.Plot).delete()
+db.commit()
+
 # People with confirmed real GPS coordinates (from your EXIF app / Samsung Notes)
 PEOPLE_WITH_GPS = [
     {

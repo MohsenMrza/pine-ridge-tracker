@@ -6,7 +6,7 @@ and a curated du'a library.
 
 ## Stack
 - **Backend:** FastAPI + PostgreSQL (SQLAlchemy)
-- **Frontend:** React + Vite + Leaflet
+- **Frontend:** React + Vite + Leaflet, using real OpenStreetMap tiles
 - **Runs via:** Docker Compose
 
 ## Prerequisites (Windows)
@@ -32,50 +32,59 @@ To stop: `Ctrl+C`, then `docker compose down`.
 docker compose exec backend python seed.py
 ```
 
-`backend/seed.py` currently contains **19 real family members** with names
-and dates read directly from the plaque photos taken on-site. They don't
-have plot/location data yet (see below).
+`backend/seed.py` contains **19 real family members** with names and dates
+read directly from the plaque photos taken on-site. Running this script
+**clears all existing people/plots first**, so it's always safe to re-run
+after editing it -- no more stale test pins piling up.
 
 ## Current status
 
-- Real names/dates for 19 family members are seeded (no relationships
+- Real names/dates for all 19 family members are seeded (no relationships
   tracked yet, per your note that they span multiple family branches).
-- **7 of the 19 have real GPS coordinates** pulled from an on-device EXIF
-  app. The other 12 are still waiting on their coordinates.
-- The illustrated Pine Ridge site plan (`frontend/public/cemetery-map.png`)
-  is wired up as the live map.
-- Interactive sections: click a garden section to zoom/highlight it. Two
-  placeholder sections exist in `frontend/src/sections.js` -- replace them
-  with real traced boundaries using `section-tracing-helper.html`.
+- **7 of the 19 have real GPS coordinates**, pulled from an on-device EXIF
+  app. They show as pins on the map. The other 12 are still waiting on
+  their coordinates.
+- The map is now real OpenStreetMap tiles centered on Pine Ridge, plotting
+  people directly at their real GPS position (see "Why we switched" below).
+
+## Why we switched from the illustrated map to real GPS tiles
+
+We initially used the illustrated Pine Ridge "garden" brochure map as a
+custom image overlay. Once real GPS coordinates came in, calibrating them
+against that image revealed the family's actual graves sit **outside the
+area that brochure map covers** -- it only shows the ornamental garden
+section near the entrance/pond, not the in-ground burial fields further
+south where your family is. Rather than forcing real coordinates onto the
+wrong image, the app now uses a real geographic map (OpenStreetMap tiles)
+with actual GPS pins. This is simpler, accurate, and scales cleanly as more
+coordinates come in.
+
+The illustrated map file (`frontend/public/cemetery-map.png`) and the two
+helper tools below are no longer used by the live app, but are kept in the
+repo in case you want a stylized overview map as a secondary/decorative
+view later.
 
 ## About GPS data
 
 Photos uploaded directly to me have their embedded GPS metadata stripped in
-transit (a privacy measure, not a setting on your phone -- the earlier
-advice to check Camera app > Location tags was a mistaken diagnosis).
+transit (a privacy measure, not a setting on your phone). The reliable way
+to get real coordinates: use an on-device EXIF viewer app (as you're
+already doing) and copy the values into `backend/seed.py` directly, or
+export them as a batch (CSV/KML) if your app supports it.
 
-The reliable way to get real coordinates: use an on-device EXIF viewer app
-(as you're already doing) and copy the values into `backend/seed.py`
-directly, or export them as a batch (CSV/KML) if your app supports it.
-7 of the 19 people already have real coordinates seeded this way.
+## Legacy tools (not currently used by the live app)
 
-## Tools included
-
-- **`pin-placement-helper.html`** -- open in your browser, click a spot on
-  the map, get the `map_x`/`map_y` percentages to paste into `seed.py`.
-- **`section-tracing-helper.html`** -- open in your browser, click around a
-  garden's border to trace it, name it, repeat, then export JSON to paste
-  into `frontend/src/sections.js`.
+- **`pin-placement-helper.html`** -- click a spot on the illustrated map,
+  get percentage coordinates. Only useful if you bring back an image-based
+  overlay map.
+- **`section-tracing-helper.html`** -- trace garden section boundaries on
+  the illustrated map. Same caveat as above.
 
 ## Next steps (roughly in order)
 
-1. Place map pins for the 19 seeded people using `pin-placement-helper.html`
-   (use the photo-timestamp clusters noted as comments in `seed.py` as a
-   rough guide to which plaques were near each other).
-2. Trace the real garden section boundaries with `section-tracing-helper.html`
-   and replace the placeholder sections in `sections.js`.
-3. Add photo upload support for `Person.photo_url`.
-4. Populate `Relationship` rows once you're ready to track family connections.
-5. Populate `DuaEntry` with a curated, tagged set of du'as.
-6. Generate QR codes per plot pointing to `https://yourdomain.com/plot/{id}`.
-7. Add authentication once you're ready to expand beyond your immediate family.
+1. Get GPS coordinates for the remaining 12 people and add them to `seed.py`.
+2. Add photo upload support for `Person.photo_url`.
+3. Populate `Relationship` rows once you're ready to track family connections.
+4. Populate `DuaEntry` with a curated, tagged set of du'as.
+5. Generate QR codes per plot pointing to `https://yourdomain.com/plot/{id}`.
+6. Add authentication once you're ready to expand beyond your immediate family.
