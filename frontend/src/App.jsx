@@ -1,28 +1,28 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
+import { gpsToLocal } from "./geo";
+import MapBackground from "./MapBackground";
 
 const API_URL = "http://localhost:8000";
 
-// Pine Ridge Memorial Gardens, Ajax -- roughly centered on the burial
-// fields (not the ornamental garden near the entrance, which is a
-// different part of the property).
-const CEMETERY_CENTER = [43.8858, -79.0665];
-const DEFAULT_ZOOM = 18;
-
-const pinIcon = new L.Icon({
-  iconUrl:
-    "data:image/svg+xml;base64," +
-    btoa(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42">
-        <path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 26 16 26s16-14 16-26c0-8.8-7.2-16-16-16z" fill="#6b5b95"/>
-        <circle cx="16" cy="16" r="6" fill="#fff"/>
-      </svg>`
-    ),
-  iconSize: [32, 42],
-  iconAnchor: [16, 42],
-  popupAnchor: [0, -38],
-});
+function makePinIcon(delay) {
+  return L.divIcon({
+    className: "",
+    html: `
+      <div class="grave-pin" style="--delay:${delay}ms">
+        <div class="grave-pin__halo"></div>
+        <svg class="grave-pin__mark" width="18" height="24" viewBox="0 0 30 40">
+          <path d="M15 0C6.7 0 0 6.7 0 15c0 11.2 15 25 15 25s15-13.8 15-25C30 6.7 23.3 0 15 0z" fill="#B98D3E"/>
+          <circle cx="15" cy="15" r="5.5" fill="#F2ECDD"/>
+        </svg>
+      </div>
+    `,
+    iconSize: [18, 24],
+    iconAnchor: [9, 24],
+    popupAnchor: [0, -22],
+  });
+}
 
 function App() {
   const [plots, setPlots] = useState([]);
@@ -60,6 +60,8 @@ function App() {
     (plot) => plot.latitude == null || plot.longitude == null
   ).length;
 
+  const visiblePlots = searchTerm ? filteredPlots : plotsWithGps;
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -83,49 +85,54 @@ function App() {
       )}
       {!loading && !error && peopleWithoutLocation > 0 && (
         <div className="status-banner">
-          {peopleWithoutLocation} {peopleWithoutLocation === 1 ? "person" : "people"} not shown yet -- waiting on GPS coordinates.
+          {peopleWithoutLocation}{" "}
+          {peopleWithoutLocation === 1 ? "person" : "people"} not shown yet
+          -- waiting on GPS coordinates.
         </div>
       )}
 
       <MapContainer
-        center={CEMETERY_CENTER}
-        zoom={DEFAULT_ZOOM}
+        crs={L.CRS.Simple}
+        center={[0, 0]}
+        zoom={2}
+        minZoom={0}
+        maxZoom={6}
         style={{ height: "calc(100vh - 80px)", width: "100%" }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+        <MapBackground />
 
-        {(searchTerm ? filteredPlots : plotsWithGps).map((plot) => (
-          <Marker
-            key={plot.id}
-            position={[plot.latitude, plot.longitude]}
-            icon={pinIcon}
-          >
-            <Popup>
-              <div className="popup-content">
-                {plot.section && (
-                  <strong>
-                    Section {plot.section}, Row {plot.row}, Plot{" "}
-                    {plot.plot_number}
-                  </strong>
-                )}
-                {plot.people.map((person) => (
-                  <div key={person.id} className="popup-person">
-                    <div className="popup-name">{person.full_name}</div>
-                    <div className="popup-dates">
-                      {person.birth_date} – {person.death_date}
+        {visiblePlots.map((plot, i) => {
+          const position = gpsToLocal(plot.latitude, plot.longitude);
+          return (
+            <Marker
+              key={plot.id}
+              position={position}
+              icon={makePinIcon(i * 80)}
+            >
+              <Popup>
+                <div className="popup-content">
+                  {plot.section && (
+                    <strong>
+                      Section {plot.section}, Row {plot.row}, Plot{" "}
+                      {plot.plot_number}
+                    </strong>
+                  )}
+                  {plot.people.map((person) => (
+                    <div key={person.id} className="popup-person">
+                      <div className="popup-name">{person.full_name}</div>
+                      <div className="popup-dates">
+                        {person.birth_date} – {person.death_date}
+                      </div>
+                      {person.bio && (
+                        <div className="popup-bio">{person.bio}</div>
+                      )}
                     </div>
-                    {person.bio && (
-                      <div className="popup-bio">{person.bio}</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+                  ))}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );

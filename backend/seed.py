@@ -110,10 +110,16 @@ PEOPLE_WITHOUT_GPS = [
     {"full_name": "Mohammed Imtiazuddin Khan", "birth_date": date(1960, 1, 1), "death_date": date(2014, 1, 1)},
 ]
 
+plots_by_coord = {}
+
 for entry in PEOPLE_WITH_GPS:
-    plot = models.Plot(latitude=entry["latitude"], longitude=entry["longitude"])
-    db.add(plot)
-    db.flush()  # get plot.id before commit
+    coord = (entry["latitude"], entry["longitude"])
+    plot = plots_by_coord.get(coord)
+    if plot is None:
+        plot = models.Plot(latitude=entry["latitude"], longitude=entry["longitude"])
+        db.add(plot)
+        db.flush()  # get plot.id before commit
+        plots_by_coord[coord] = plot
 
     person = models.Person(
         full_name=entry["full_name"],

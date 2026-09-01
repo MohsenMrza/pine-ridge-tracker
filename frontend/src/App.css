@@ -4,9 +4,19 @@
   padding: 0;
 }
 
+:root {
+  --moss-deep: #3b4a2f;
+  --moss-mid: #5c7a4c;
+  --parchment: #f2ecdd;
+  --gold: #b98d3e;
+  --ink: #2b271e;
+  --pond-blue: #7fa8b3;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  color: #2c2c2c;
+  font-family: "Work Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--ink);
+  background: var(--moss-deep);
 }
 
 .app-shell {
@@ -19,17 +29,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px;
-  background: #ffffff;
-  border-bottom: 1px solid #e2e2e2;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 18px 28px;
+  background: var(--parchment);
+  border-bottom: 2px solid var(--gold);
   z-index: 1000;
 }
 
 .app-header h1 {
-  font-size: 20px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 24px;
   font-weight: 600;
-  color: #3d3d3d;
+  color: var(--ink);
+  letter-spacing: 0.01em;
 }
 
 .header-controls {
@@ -39,71 +50,138 @@ body {
 }
 
 .search-box {
-  padding: 8px 14px;
-  border: 1px solid #d5d5d5;
-  border-radius: 8px;
+  padding: 9px 16px;
+  border: 1px solid rgba(43, 39, 30, 0.2);
+  border-radius: 999px;
+  font-family: "Work Sans", sans-serif;
   font-size: 14px;
   width: 260px;
   outline: none;
+  background: #fff;
   transition: border-color 0.15s ease;
 }
 
 .search-box:focus {
-  border-color: #6b5b95;
-}
-
-.reset-btn {
-  padding: 8px 14px;
-  border: 1px solid #6b5b95;
-  background: #f5f2fa;
-  color: #6b5b95;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.reset-btn:hover {
-  background: #ece5f5;
+  border-color: var(--gold);
 }
 
 .status-banner {
-  padding: 8px 24px;
-  background: #f5f2fa;
-  color: #6b5b95;
-  font-size: 14px;
+  padding: 8px 28px;
+  background: #e9e2cf;
+  color: var(--ink);
+  font-size: 13px;
 }
 
 .status-banner.error {
-  background: #fdeeee;
-  color: #b23b3b;
+  background: #f2dede;
+  color: #8a3b3b;
 }
 
+/* --- Pins --- */
+
+.grave-pin {
+  position: relative;
+  width: 18px;
+  height: 24px;
+  opacity: 0;
+  transform: translateY(-14px) scale(0.6);
+  animation: pin-bloom 0.55s ease-out forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.grave-pin__mark {
+  position: relative;
+  z-index: 2;
+  display: block;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
+}
+
+.grave-pin__halo {
+  position: absolute;
+  left: 9px;
+  top: 9px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(185, 141, 62, 0.45);
+  transform: translate(-50%, -50%);
+  animation: pin-pulse 2.6s ease-out infinite;
+  animation-delay: var(--delay, 0ms);
+}
+
+@keyframes pin-bloom {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pin-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3.2);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grave-pin {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  .grave-pin__halo {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* --- Popups --- */
+
 .popup-content {
+  font-family: "Work Sans", sans-serif;
   font-size: 13px;
-  min-width: 180px;
+  min-width: 190px;
+}
+
+.popup-content strong {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
 }
 
 .popup-person {
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #e5ddc8;
 }
 
 .popup-name {
+  font-family: "Fraunces", Georgia, serif;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 15px;
+  color: var(--ink);
 }
 
 .popup-dates {
-  color: #777;
+  color: #7a7565;
   font-size: 12px;
   margin: 2px 0 4px;
 }
 
 .popup-bio {
   font-size: 12px;
-  color: #444;
-  line-height: 1.4;
+  color: #4a4536;
+  line-height: 1.45;
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--parchment);
+  border-radius: 10px;
+}
+
+.leaflet-popup-tip {
+  background: var(--parchment);
 }
